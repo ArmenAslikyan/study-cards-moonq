@@ -10,6 +10,9 @@ class StudyCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final packages = context.watch<PackageProvider>().packages;
+    final hasCardsToReview = packages.any(
+      (package) => package.learnt < package.cardNumber,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFFDF7F7),
@@ -66,63 +69,129 @@ class StudyCards extends StatelessWidget {
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC2185B),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'ԿՐԿՆՈՒԹՅԱՆ ՀԵՐԹ',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.1,
+              if (hasCardsToReview)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC2185B),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'ԿՐԿՆՈՒԹՅԱՆ ՀԵՐԹ',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.1,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '17 քարտ սպասում է',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                            SizedBox(height: 8),
+                            Text(
+                              '17 քարտ սպասում է',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            '4 փաթեթ · ~6 րոպե',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
+                            SizedBox(height: 4),
+                            Text(
+                              '4 փաթեթ · ~6 րոպե',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.play_arrow,
-                          color: Color(0xFFC2185B),
+                          ],
                         ),
-                        onPressed: () {},
                       ),
-                    ),
-                  ],
+                      Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.play_arrow,
+                            color: Color(0xFFC2185B),
+                          ),
+                          onPressed: () {},
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF287A5B),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              packages.isEmpty
+                                  ? 'ԿՐԿՆՈՒԹՅԱՆ ՀԵՐԹ'
+                                  : 'ՀՐԱՇԱԼԻ ԱՇԽԱՏԱՆՔ',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              packages.isEmpty
+                                  ? 'Կրկնելու քարտեր չկան'
+                                  : 'Դու յուրացրել ես բոլոր քարտերը',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              packages.isEmpty
+                                  ? 'Ավելացրու փաթեթ՝ սովորել սկսելու համար։'
+                                  : 'Այս պահին կրկնելու ոչինչ չկա։',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Color(0xFF287A5B),
+                          size: 28,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               const SizedBox(height: 24),
               const Text(
                 'Իմ փաթեթները',
