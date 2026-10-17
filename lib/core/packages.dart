@@ -4,6 +4,7 @@ import 'package:study_cards_moonq/models/package.dart';
 
 List<Package> packages = [
 	Package(
+		id: 1,
 		title: 'Անգլերեն · A2',
 		icon: const Icon(Icons.language),
 		iconColor: const Icon(Icons.circle, color: Colors.white),
@@ -27,6 +28,7 @@ List<Package> packages = [
 		],
 	),
 	Package(
+		id: 2,
 		title: 'Անգլերեն · Ճամփորդություն',
 		icon: const Icon(Icons.flight_takeoff),
 		iconColor: const Icon(Icons.circle, color: Colors.white),
@@ -50,6 +52,7 @@ List<Package> packages = [
 		],
 	),
 	Package(
+		id: 3,
 		title: 'Անգլերեն · Ուսում և աշխատանք',
 		icon: const Icon(Icons.menu_book),
 		iconColor: const Icon(Icons.circle, color: Colors.white),

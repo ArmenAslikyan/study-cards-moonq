@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:study_cards_moonq/presentation/new_package.dart';
+import 'package:study_cards_moonq/presentation/widgets/package_card.dart';
+import 'package:study_cards_moonq/providers/package_provider.dart';
 
 class StudyCards extends StatelessWidget {
-  const StudyCards({Key? key}) : super(key: key);
+  const StudyCards({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final packages = context.watch<PackageProvider>().packages;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFDF7F7),
-      
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
@@ -26,7 +32,10 @@ class StudyCards extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -104,9 +113,11 @@ class StudyCards extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.play_arrow, color: Color(0xFFC2185B)),
-                        onPressed: () {
-                        },
+                        icon: const Icon(
+                          Icons.play_arrow,
+                          color: Color(0xFFC2185B),
+                        ),
+                        onPressed: () {},
                       ),
                     ),
                   ],
@@ -122,9 +133,31 @@ class StudyCards extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              if (packages.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child: Text(
+                    'Դեռ փաթեթներ չկան',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: packages.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) =>
+                      PackageCard(package: packages[index]),
+                ),
+              SizedBox(height: 20),
               OutlinedButton(
-                onPressed: () {
-                },
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => const NewPackage(),
+                  ),
+                ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(
                     color: Color(0xFFC2185B),
