@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:study_cards_moonq/models/flashcards.dart';
 
 class Package {
   final String title;
+  final List<Flashcards> flashcards = [];
   final int cardNumber;
   final Icon icon;
   final Icon iconColor;
