@@ -31,11 +31,9 @@ class NewPackage extends StatelessWidget {
           return _PackageOption(
             package: package,
             isAdded: isAdded,
-            onAdd: () async {
-              await context.read<PackageProvider>().addPackage(package);
-              if (!context.mounted) return;
-              Navigator.of(context).pop();
-            },
+            onAdd: () => context.read<PackageProvider>().addPackage(package),
+            onDelete: () =>
+                context.read<PackageProvider>().deletePackage(package.id),
           );
         },
       ),
@@ -48,11 +46,13 @@ class _PackageOption extends StatelessWidget {
     required this.package,
     required this.isAdded,
     required this.onAdd,
+    required this.onDelete,
   });
 
   final Package package;
   final bool isAdded;
-  final VoidCallback onAdd;
+  final Future<void> Function() onAdd;
+  final Future<void> Function() onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -80,14 +80,12 @@ class _PackageOption extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text('${package.cardNumber} քարտ'),
-        trailing: isAdded
-            ? const Icon(Icons.check_circle, color: Color(0xFF547C6B))
-            : IconButton(
-                tooltip: 'Ավելացնել փաթեթը',
-                onPressed: onAdd,
-                icon: const Icon(Icons.add_circle_outline),
-                color: const Color(0xFFC2185B),
-              ),
+        trailing: IconButton(
+          tooltip: isAdded ? 'Հեռացնել փաթեթը' : 'Ավելացնել փաթեթը',
+          onPressed: () => isAdded ? onDelete() : onAdd(),
+          icon: Icon(isAdded ? Icons.delete_outline : Icons.add_circle_outline),
+          color: isAdded ? const Color(0xFFB13C4A) : const Color(0xFFC2185B),
+        ),
       ),
     );
   }
