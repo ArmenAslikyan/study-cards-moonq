@@ -1,14 +1,14 @@
 class Flashcards {
-  final String armenian_word;
+  final String armenianWord;
   final String pronunciation;
-  final String english_translation;
-  final String example_sentence;
-  final String example_sentence_armenian;
+  final String englishTranslation;
+  final String exampleSentence;
+  final String exampleSentenceArmenian;
   Flashcards({
-    required this.armenian_word,
+    required this.armenianWord,
     required this.pronunciation,
-    required this.english_translation,
-    required this.example_sentence,
-    required this.example_sentence_armenian
+    required this.englishTranslation,
+    required this.exampleSentence,
+    required this.exampleSentenceArmenian
   });
 }
