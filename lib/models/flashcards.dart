@@ -1,14 +1,16 @@
 class Flashcards {
+  final String id;
   final String armenianWord;
   final String pronunciation;
   final String englishTranslation;
   final String exampleSentence;
   final String exampleSentenceArmenian;
   Flashcards({
+    String? id,
     required this.armenianWord,
     required this.pronunciation,
     required this.englishTranslation,
     required this.exampleSentence,
     required this.exampleSentenceArmenian
-  });
+  }) : id = id ?? englishTranslation;
 }

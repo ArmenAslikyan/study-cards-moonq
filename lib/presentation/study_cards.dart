@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:study_cards_moonq/presentation/new_package.dart';
 import 'package:study_cards_moonq/presentation/widgets/package_card.dart';
 import 'package:study_cards_moonq/providers/package_provider.dart';
+import 'package:study_cards_moonq/presentation/review_screen.dart';
+import 'package:study_cards_moonq/providers/review_provider.dart';
+import 'package:study_cards_moonq/providers/progress_provider.dart';
+import 'package:study_cards_moonq/providers/storage_provider.dart';
 
 class StudyCards extends StatelessWidget {
   const StudyCards({super.key});
@@ -10,8 +14,19 @@ class StudyCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final packages = context.watch<PackageProvider>().packages;
-    final hasCardsToReview = packages.any(
-      (package) => package.learnt < package.cardNumber,
+    final progress = context.watch<ProgressProvider>();
+    final storage = context.watch<StorageProvider>();
+    final dueCount = packages
+        .expand((package) => package.flashcards.map(
+              (card) => progress.needsReview(package.id, card) ? card : null,
+            ))
+        .whereType<Object>()
+        .length;
+    final hasCardsToReview = dueCount > 0;
+    final hasUnstudiedCards = packages.any(
+      (package) => package.flashcards.any(
+        (card) => !progress.wasStudied(package.id, card),
+      ),
     );
 
     return Scaffold(
@@ -45,9 +60,9 @@ class StudyCards extends StatelessWidget {
                       border: Border.all(color: const Color(0xFFE8D7D7)),
                     ),
                     child: Row(
-                      children: const [
+                      children: [
                         Text(
-                          '6 օր',
+                        '${storage.streak} օր',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Color(0xFFC2185B),
@@ -64,8 +79,8 @@ class StudyCards extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Այսօր սովորել ես 24 քարտ',
+              Text(
+                'Այսօր սովորել ես ${progress.learnedToday} քարտ',
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               const SizedBox(height: 20),
@@ -81,7 +96,7 @@ class StudyCards extends StatelessWidget {
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'ԿՐԿՆՈՒԹՅԱՆ ՀԵՐԹ',
                               style: TextStyle(
@@ -93,7 +108,7 @@ class StudyCards extends StatelessWidget {
                             ),
                             SizedBox(height: 8),
                             Text(
-                              '17 քարտ սպասում է',
+                              '$dueCount քարտ սպասում է',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -102,7 +117,7 @@ class StudyCards extends StatelessWidget {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              '4 փաթեթ · ~6 րոպե',
+                              '${packages.length} փաթեթ · ~${(dueCount * 0.4).ceil()} րոպե',
                               style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 12,
@@ -121,7 +136,18 @@ class StudyCards extends StatelessWidget {
                             Icons.play_arrow,
                             color: Color(0xFFC2185B),
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            final review = context.read<ReviewProvider>();
+                            review.startDueReview(packages);
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => ChangeNotifierProvider.value(
+                                  value: review,
+                                  child: const ReviewScreen(),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -153,7 +179,7 @@ class StudyCards extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              packages.isEmpty
+                              packages.isEmpty || hasUnstudiedCards
                                   ? 'Կրկնելու քարտեր չկան'
                                   : 'Դու յուրացրել ես բոլոր քարտերը',
                               style: const TextStyle(
@@ -166,6 +192,8 @@ class StudyCards extends StatelessWidget {
                             Text(
                               packages.isEmpty
                                   ? 'Ավելացրու փաթեթ՝ սովորել սկսելու համար։'
+                                  : hasUnstudiedCards
+                                  ? 'Սեղմիր փաթեթը՝ սովորելը սկսելու համար։'
                                   : 'Այս պահին կրկնելու ոչինչ չկա։',
                               style: const TextStyle(
                                 color: Colors.white70,
@@ -218,7 +246,27 @@ class StudyCards extends StatelessWidget {
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) =>
-                      PackageCard(package: packages[index]),
+                      PackageCard(
+                        package: packages[index],
+                        learnedCount: packages[index]
+                            .flashcards
+                            .where((card) => progress.isKnown(
+                                packages[index].id, card))
+                            .length,
+                        onTap: () {
+                          final reviewProvider =
+                              context.read<ReviewProvider>();
+                          reviewProvider.selectPackage(packages[index]);
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => ChangeNotifierProvider.value(
+                                value: reviewProvider,
+                                child: const ReviewScreen(),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                 ),
               SizedBox(height: 20),
               OutlinedButton(
