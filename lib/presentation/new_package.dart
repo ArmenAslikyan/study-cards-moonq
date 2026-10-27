@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:study_cards_moonq/models/package.dart';
+import 'package:study_cards_moonq/presentation/create_package_screen.dart';
 import 'package:study_cards_moonq/providers/package_provider.dart';
 
 class NewPackage extends StatelessWidget {
@@ -18,24 +19,113 @@ class NewPackage extends StatelessWidget {
       backgroundColor: const Color(0xFFFDF7F7),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFDF7F7),
-        title: const Text('Նոր փաթեթ'),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Նոր փաթեթ',
+          style: TextStyle(color: Color(0xFF2C2C2C), fontWeight: FontWeight.bold),
+        ),
       ),
-      body: ListView.separated(
+      body: ListView(
         padding: const EdgeInsets.all(20),
-        itemCount: availablePackages.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final package = availablePackages[index];
-          final isAdded = addedPackageIds.contains(package.id);
+        children: [
+          Card(
+            color: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFFC2185B), width: 1.5),
+            ),
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const CreatePackageScreen(),
+                ),
+              ),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFC2185B).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.add_circle,
+                        color: Color(0xFFC2185B),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Ստեղծել սեփական փաթեթ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C2C2C),
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Ավելացրու քո քարտերը հարցերով և պատասխաններով',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Color(0xFFC2185B),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Հասանելի փաթեթներ',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C2C2C),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: availablePackages.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final package = availablePackages[index];
+              final isAdded = addedPackageIds.contains(package.id);
 
-          return _PackageOption(
-            package: package,
-            isAdded: isAdded,
-            onAdd: () => context.read<PackageProvider>().addPackage(package),
-            onDelete: () =>
-                context.read<PackageProvider>().deletePackage(package.id),
-          );
-        },
+              return _PackageOption(
+                package: package,
+                isAdded: isAdded,
+                onAdd: () => context.read<PackageProvider>().addPackage(package),
+                onDelete: () =>
+                    context.read<PackageProvider>().deletePackage(package.id),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -59,7 +149,11 @@ class _PackageOption extends StatelessWidget {
     return Card(
       color: Colors.white,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFEADDE2)),
+      ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(

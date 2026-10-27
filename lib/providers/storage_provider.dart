@@ -1,62 +1,65 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:study_cards_moonq/domain/i_storage_repo.dart';
+import 'package:study_cards_moonq/infrastructure/storage_repo.dart';
+import 'package:study_cards_moonq/models/package.dart';
 
-class StorageProvider extends ChangeNotifier {
-  static const _progressKey = 'card_progress';
-  static const _packagesKey = 'added_packages';
-  Map<String, Map<String, dynamic>> _progress = {};
-  Set<int> _addedPackageIds = {};
-  bool _loaded = false;
-  bool get isLoaded => _loaded;
-  Map<String, Map<String, dynamic>> get progress => Map.unmodifiable(_progress);
-  Set<int> get addedPackageIds => Set.unmodifiable(_addedPackageIds);
-  int get streak {
-    final dates = _progress.values
-        .map((item) => item['date'])
-        .whereType<String>()
-        .toSet();
-    var day = DateTime.now();
-    var count = 0;
-    while (dates.contains(_date(day))) {
-      count++;
-      day = day.subtract(const Duration(days: 1));
-    }
-    return count;
-  }
+class StorageProvider extends ChangeNotifier implements IStorageRepo {
+  StorageProvider([StorageRepo? repo]) : _repo = repo ?? StorageRepo();
 
-  String _date(DateTime date) => date.toIso8601String().substring(0, 10);
+  final StorageRepo _repo;
 
+  bool get isLoaded => _repo.isLoaded;
+
+  @override
+  Map<String, Map<String, dynamic>> get progress => _repo.progress;
+
+  @override
+  Set<int> get addedPackageIds => _repo.addedPackageIds;
+
+  @override
+  Set<String> get studiedDates => _repo.studiedDates;
+
+  @override
+  int get streak => _repo.streak;
+
+  @override
   Future<void> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_progressKey);
-    if (raw != null) {
-      final decoded = jsonDecode(raw) as Map<String, dynamic>;
-      _progress = decoded.map((key, value) => MapEntry(key, Map<String, dynamic>.from(value as Map)));
-    }
-    _addedPackageIds = (prefs.getStringList(_packagesKey) ?? []).map(int.parse).toSet();
-    _loaded = true;
+    await _repo.load();
     notifyListeners();
   }
 
+  @override
   Future<void> saveProgress(String key, Map<String, dynamic> value) async {
-    _progress[key] = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_progressKey, jsonEncode(_progress));
+    await _repo.saveProgress(key, value);
     notifyListeners();
   }
 
+  @override
   Future<void> removeProgress(String key) async {
-    _progress.remove(key);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_progressKey, jsonEncode(_progress));
+    await _repo.removeProgress(key);
     notifyListeners();
   }
 
+  @override
   Future<void> saveAddedPackages(Set<int> ids) async {
-    _addedPackageIds = ids;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_packagesKey, ids.map((id) => '$id').toList());
+    await _repo.saveAddedPackages(ids);
     notifyListeners();
+  }
+
+  @override
+  Future<void> recordStudyDate(String date) async {
+    await _repo.recordStudyDate(date);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> saveCustomPackages(List<Package> packages) async {
+    await _repo.saveCustomPackages(packages);
+    notifyListeners();
+  }
+
+  @override
+  Future<List<Package>> loadCustomPackages() async {
+    return _repo.loadCustomPackages();
   }
 }
