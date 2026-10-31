@@ -8,56 +8,95 @@ class ProgressProvider extends ChangeNotifier {
 
   final IStorageRepo _storage;
 
-  String _key(int packageId, Flashcards card) => '$packageId:${card.id}';
+  String _cardKey(int packageId, Flashcards card) {
+    return '$packageId:${card.id}';
+  }
 
-  bool isKnown(int packageId, Flashcards card) =>
-      _storage.progress[_key(packageId, card)]?['known'] == true;
+  String get _todayDate {
+    return DateTime.now().toIso8601String().substring(0, 10);
+  }
 
-  bool needsReview(int packageId, Flashcards card) =>
-      _storage.progress[_key(packageId, card)]?['needsReview'] == true;
+  bool isKnown(int packageId, Flashcards card) {
+    final key = _cardKey(packageId, card);
+    final cardData = _storage.progress[key];
+    if (cardData == null) {
+      return false;
+    }
+    return cardData['known'] == true;
+  }
 
-  bool wasStudied(int packageId, Flashcards card) =>
-      _storage.progress.containsKey(_key(packageId, card));
+  bool needsReview(int packageId, Flashcards card) {
+    final key = _cardKey(packageId, card);
+    final cardData = _storage.progress[key];
+    if (cardData == null) {
+      return false;
+    }
+    return cardData['needsReview'] == true;
+  }
 
-  int get learnedToday => _storage.progress.values
-      .where((item) => item['known'] == true && item['date'] == _today)
-      .length;
+  bool wasStudied(int packageId, Flashcards card) {
+    final key = _cardKey(packageId, card);
+    return _storage.progress.containsKey(key);
+  }
 
-  int get streak => _storage.streak;
+  int get streak {
+    return _storage.streak;
+  }
 
-  String get _today => DateTime.now().toIso8601String().substring(0, 10);
+  int get learnedToday {
+    int total = 0;
+    for (final cardInfo in _storage.progress.values) {
+      final isCardKnown = cardInfo['known'] == true;
+      final isStudiedToday = cardInfo['date'] == _todayDate;
+      if (isCardKnown && isStudiedToday) {
+        total = total + 1;
+      }
+    }
+    return total;
+  }
 
   int getLearnedCount(Package package) {
-    return package.flashcards
-        .where((card) => isKnown(package.id, card))
-        .length;
-  }
-
-  double getPackageProgress(Package package) {
-    if (package.cardNumber == 0) return 0.0;
-    return getLearnedCount(package) / package.cardNumber;
-  }
-
-  int getDueCount(List<Package> packages) {
-    var count = 0;
-    for (final package in packages) {
-      for (final card in package.flashcards) {
-        if (needsReview(package.id, card)) {
-          count++;
-        }
+    int count = 0;
+    for (final card in package.flashcards) {
+      if (isKnown(package.id, card)) {
+        count = count + 1;
       }
     }
     return count;
   }
 
-  bool hasCardsToReview(List<Package> packages) => getDueCount(packages) > 0;
+  double getPackageProgress(Package package) {
+    if (package.cardNumber == 0) {
+      return 0.0;
+    }
+    return getLearnedCount(package) / package.cardNumber;
+  }
+
+  int getDueCount(List<Package> packages) {
+    int totalDue = 0;
+    for (final package in packages) {
+      for (final card in package.flashcards) {
+        if (needsReview(package.id, card)) {
+          totalDue = totalDue + 1;
+        }
+      }
+    }
+    return totalDue;
+  }
+
+  bool hasCardsToReview(List<Package> packages) {
+    return getDueCount(packages) > 0;
+  }
 
   bool hasUnstudiedCards(List<Package> packages) {
-    return packages.any(
-      (package) => package.flashcards.any(
-        (card) => !wasStudied(package.id, card),
-      ),
-    );
+    for (final package in packages) {
+      for (final card in package.flashcards) {
+        if (!wasStudied(package.id, card)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   Future<void> markKnown(
@@ -65,28 +104,33 @@ class ProgressProvider extends ChangeNotifier {
     Flashcards card, {
     required bool firstAttempt,
   }) async {
-    await _storage.saveProgress(_key(packageId, card), {
+    final key = _cardKey(packageId, card);
+    final data = {
       'known': true,
       'needsReview': false,
       'firstAttempt': firstAttempt,
-      'date': _today,
+      'date': _todayDate,
       'lastReviewed': DateTime.now().toIso8601String(),
-    });
+    };
+    await _storage.saveProgress(key, data);
     notifyListeners();
   }
 
   Future<void> markNeedsReview(int packageId, Flashcards card) async {
-    await _storage.saveProgress(_key(packageId, card), {
+    final key = _cardKey(packageId, card);
+    final data = {
       'known': false,
       'needsReview': true,
-      'date': _today,
+      'date': _todayDate,
       'lastReviewed': DateTime.now().toIso8601String(),
-    });
+    };
+    await _storage.saveProgress(key, data);
     notifyListeners();
   }
 
   Future<void> resetCard(int packageId, Flashcards card) async {
-    await _storage.removeProgress(_key(packageId, card));
+    final key = _cardKey(packageId, card);
+    await _storage.removeProgress(key);
     notifyListeners();
   }
 }

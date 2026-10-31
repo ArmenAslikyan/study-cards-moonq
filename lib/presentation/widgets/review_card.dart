@@ -6,7 +6,6 @@ import 'package:study_cards_moonq/presentation/widgets/review_card_front.dart';
 
 class ReviewCard extends StatefulWidget {
   const ReviewCard({super.key, required this.card, this.onFlip});
-
   final Flashcards card;
   final VoidCallback? onFlip;
 
@@ -14,12 +13,8 @@ class ReviewCard extends StatefulWidget {
   State<ReviewCard> createState() => _ReviewCardState();
 }
 
-class _ReviewCardState extends State<ReviewCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 400),
-    vsync: this,
-  );
+class _ReviewCardState extends State<ReviewCard> with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(duration: const Duration(milliseconds: 350), vsync: this);
   bool _flipped = false;
 
   @override
@@ -39,35 +34,25 @@ class _ReviewCardState extends State<ReviewCard>
 
   void _toggle() {
     setState(() => _flipped = !_flipped);
-    if (_flipped) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
+    _flipped ? _controller.forward() : _controller.reverse();
     widget.onFlip?.call();
   }
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: _toggle,
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            final angle = _controller.value * pi;
-            return Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, .001)
-                ..rotateY(angle),
-              child: angle >= pi / 2
-                  ? Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.rotationY(pi),
-                      child: ReviewCardBack(card: widget.card),
-                    )
-                  : ReviewCardFront(card: widget.card),
-            );
-          },
-        ),
-      );
+    onTap: _toggle,
+    child: AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final angle = _controller.value * pi;
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()..setEntry(3, 2, .001)..rotateY(angle),
+          child: angle >= pi / 2
+              ? Transform(alignment: Alignment.center, transform: Matrix4.rotationY(pi), child: ReviewCardBack(card: widget.card))
+              : ReviewCardFront(card: widget.card),
+        );
+      },
+    ),
+  );
 }
