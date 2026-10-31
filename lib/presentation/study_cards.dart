@@ -78,12 +78,8 @@ class StudyCards extends StatelessWidget {
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final package = packages[index];
-                    final learnedCount = context.select<ProgressProvider, int>(
-                      (p) => p.getLearnedCount(package),
-                    );
                     return PackageCard(
                       package: package,
-                      learnedCount: learnedCount,
                       onTap: () {
                         context.read<ReviewProvider>().selectPackage(package);
                         Navigator.of(context).push(
