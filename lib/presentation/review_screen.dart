@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:study_cards_moonq/presentation/widgets/review_action_button.dart';
 import 'package:study_cards_moonq/presentation/widgets/review_card.dart';
 import 'package:study_cards_moonq/presentation/widgets/review_finished.dart';
-import 'package:study_cards_moonq/presentation/widgets/review_stat.dart';
 import 'package:study_cards_moonq/providers/review_provider.dart';
 
 class ReviewScreen extends StatelessWidget {
@@ -94,7 +92,7 @@ class ReviewScreen extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: ReviewActionButton(
+                          child: _ActionButton(
                             label: 'Կրկնել',
                             icon: Icons.rotate_right,
                             onTap: review.markRepeat,
@@ -104,7 +102,7 @@ class ReviewScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 15),
                         Expanded(
-                          child: ReviewActionButton(
+                          child: _ActionButton(
                             label: 'Գիտեմ',
                             icon: Icons.check,
                             onTap: review.markKnown,
@@ -118,13 +116,9 @@ class ReviewScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        ReviewStat('${review.knownCount}', 'Գիտեմ', Colors.green),
-                        ReviewStat('${review.repeatCount}', 'Կրկնել', Colors.red),
-                        ReviewStat(
-                          '${review.remainingCount}',
-                          'Մնացած',
-                          Colors.black87,
-                        ),
+                        _Stat('${review.knownCount}', 'Գիտեմ', Colors.green),
+                        _Stat('${review.repeatCount}', 'Կրկնել', Colors.red),
+                        _Stat('${review.remainingCount}', 'Մնացած', Colors.black87),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -134,4 +128,49 @@ class ReviewScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    required this.color,
+    required this.background,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color color;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) => ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, color: color),
+        label: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: background,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      );
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat(this.value, this.label, this.color);
+
+  final String value;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        children: [
+          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        ],
+      );
 }

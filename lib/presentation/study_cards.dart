@@ -4,6 +4,8 @@ import 'package:study_cards_moonq/models/package.dart';
 import 'package:study_cards_moonq/presentation/new_package.dart';
 import 'package:study_cards_moonq/presentation/review_screen.dart';
 import 'package:study_cards_moonq/presentation/widgets/package_card.dart';
+import 'package:study_cards_moonq/presentation/widgets/review_queue_banner.dart';
+import 'package:study_cards_moonq/presentation/widgets/streak_badge.dart';
 import 'package:study_cards_moonq/providers/package_provider.dart';
 import 'package:study_cards_moonq/providers/progress_provider.dart';
 import 'package:study_cards_moonq/providers/review_provider.dart';
@@ -15,6 +17,9 @@ class StudyCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final packages = context.select<PackageProvider, List<Package>>(
       (p) => p.packages,
+    );
+    final learnedToday = context.select<ProgressProvider, int>(
+      (p) => p.learnedToday,
     );
 
     return Scaffold(
@@ -36,13 +41,16 @@ class StudyCards extends StatelessWidget {
                       color: Color(0xFF2C2C2C),
                     ),
                   ),
-                  _StreakBadge(),
+                  StreakBadge(),
                 ],
               ),
               const SizedBox(height: 4),
-              const _LearnedTodayText(),
+              Text(
+                'Այսօր սովորել ես $learnedToday քարտ',
+                style: const TextStyle(color: Colors.grey, fontSize: 14),
+              ),
               const SizedBox(height: 20),
-              _ReviewQueueBanner(packages: packages),
+              ReviewQueueBanner(packages: packages),
               const SizedBox(height: 24),
               const Text(
                 'Իմ փաթեթները',
@@ -68,8 +76,24 @@ class StudyCards extends StatelessWidget {
                   itemCount: packages.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 12),
-                  itemBuilder: (context, index) =>
-                      _PackageItem(package: packages[index]),
+                  itemBuilder: (context, index) {
+                    final package = packages[index];
+                    final learnedCount = context.select<ProgressProvider, int>(
+                      (p) => p.getLearnedCount(package),
+                    );
+                    return PackageCard(
+                      package: package,
+                      learnedCount: learnedCount,
+                      onTap: () {
+                        context.read<ReviewProvider>().selectPackage(package);
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const ReviewScreen(),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               const SizedBox(height: 20),
               OutlinedButton(
@@ -109,229 +133,6 @@ class StudyCards extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _StreakBadge extends StatelessWidget {
-  const _StreakBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final streak = context.select<ProgressProvider, int>((p) => p.streak);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8D7D7)),
-      ),
-      child: Row(
-        children: [
-          Text(
-            '$streak օր',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFFC2185B),
-            ),
-          ),
-          const SizedBox(width: 4),
-          const Text(
-            'շարունակ',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LearnedTodayText extends StatelessWidget {
-  const _LearnedTodayText();
-
-  @override
-  Widget build(BuildContext context) {
-    final learnedToday = context.select<ProgressProvider, int>(
-      (p) => p.learnedToday,
-    );
-    return Text(
-      'Այսօր սովորել ես $learnedToday քարտ',
-      style: const TextStyle(color: Colors.grey, fontSize: 14),
-    );
-  }
-}
-
-class _ReviewQueueBanner extends StatelessWidget {
-  const _ReviewQueueBanner({required this.packages});
-
-  final List<Package> packages;
-
-  @override
-  Widget build(BuildContext context) {
-    final dueCount = context.select<ProgressProvider, int>(
-      (p) => p.getDueCount(packages),
-    );
-    final hasUnstudiedCards = context.select<ProgressProvider, bool>(
-      (p) => p.hasUnstudiedCards(packages),
-    );
-    final hasCardsToReview = dueCount > 0;
-
-    if (hasCardsToReview) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFC2185B),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'ԿՐԿՆՈՒԹՅԱՆ ՀԵՐԹ',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '$dueCount քարտ սպասում է',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${packages.length} փաթեթ · ~${(dueCount * 0.4).ceil()} րոպե',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.play_arrow,
-                  color: Color(0xFFC2185B),
-                ),
-                onPressed: () {
-                  context.read<ReviewProvider>().startDueReview(packages);
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ReviewScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF287A5B),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  packages.isEmpty ? 'ԿՐԿՆՈՒԹՅԱՆ ՀԵՐԹ' : 'ՀՐԱՇԱԼԻ ԱՇԽԱՏԱՆՔ',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  packages.isEmpty || hasUnstudiedCards
-                      ? 'Կրկնելու քարտեր չկան'
-                      : 'Դու յուրացրել ես բոլոր քարտերը',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  packages.isEmpty
-                      ? 'Ավելացրու փաթեթ՝ սովորել սկսելու համար։'
-                      : hasUnstudiedCards
-                          ? 'Սեղմիր փաթեթը՝ սովորելը սկսելու համար։'
-                          : 'Այս պահին կրկնելու ոչինչ չկա։',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.check_rounded,
-              color: Color(0xFF287A5B),
-              size: 28,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PackageItem extends StatelessWidget {
-  const _PackageItem({required this.package});
-
-  final Package package;
-
-  @override
-  Widget build(BuildContext context) {
-    final learnedCount = context.select<ProgressProvider, int>(
-      (p) => p.getLearnedCount(package),
-    );
-
-    return PackageCard(
-      package: package,
-      learnedCount: learnedCount,
-      onTap: () {
-        context.read<ReviewProvider>().selectPackage(package);
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const ReviewScreen(),
-          ),
-        );
-      },
     );
   }
 }
